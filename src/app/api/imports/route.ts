@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextRequest } from "next/server";
 
 import { db } from "@/lib/db";
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
             sellerId: parsed.sellerId,
             capturedAt: parsed.capturedAt,
             importBatchId: batch.id,
-            rawPayload: parsed.rawPayload,
+            rawPayload: parsed.rawPayload as Prisma.InputJsonValue,
           },
         });
 
