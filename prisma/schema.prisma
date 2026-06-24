@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum ProductCategory {
+  CPU
+  GPU
+  RAM
+  MOTHERBOARD
+  STORAGE
+  PSU
+  CASE
+  COOLING
+  PERIPHERAL
+  OTHER
+}
+
+enum MarketplacePlatform {
+  SHOPEE
+  LAZADA
+  TIKTOK_SHOP
+  AMAZON_MY
+  CAROUSELL
+  OTHER
+}
+
+enum ListingCondition {
+  NEW
+  USED
+  REFURBISHED
+  UNKNOWN
+}
+
+enum AliasSource {
+  MANUAL
+  RULE
+  FUZZY
+  IMPORT
+}
+
+model Product {
+  id         String          @id @default(auto()) @map("_id") @db.ObjectId
+  slug       String          @unique
+  category   ProductCategory
+  brand      String
+  model      String
+  variant    String?
+  specs      Json
+  matchKey   String          @unique
+  aliases    String[]
+  msrpSen    Int?
+  listings   Listing[]
+  aliasesRef ProductAlias[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([category, brand])
+  @@index([brand, model])
+}
+
+model Listing {
+  id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  productId         String              @db.ObjectId
+  product           Product             @relation(fields: [productId], references: [id])
+  platform          MarketplacePlatform
+  platformListingId String?
+  sourceUrl         String?
+  titleRaw          String
+  titleNormalized   String?
+  priceSen          Int
+  originalPriceSen  Int?
+  shippingSen       Int?
+  currency          String              @default("MYR")
+  condition         ListingCondition    @default(UNKNOWN)
+  sellerName        String?
+  sellerId          String?
+  capturedAt        DateTime
+  importBatchId     String?             @db.ObjectId
+  rawPayload        Json?
+  createdAt         DateTime            @default(now())
+
+  @@unique([platform, platformListingId, capturedAt])
+  @@index([productId, capturedAt(sort: Desc)])
+  @@index([platform, capturedAt(sort: Desc)])
+  @@index([importBatchId])
+  @@index([capturedAt(sort: Desc)])
+}
+
+model ProductAlias {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  productId  String      @db.ObjectId
+  product    Product     @relation(fields: [productId], references: [id])
+  alias      String      @unique
+  aliasRaw   String?
+  confidence Float       @default(1.0)
+  source     AliasSource @default(RULE)
+
+  @@index([productId])
+}
+
+model ImportBatch {
+  id           String               @id @default(auto()) @map("_id") @db.ObjectId
+  fileName     String
+  fileFormat   String
+  platform     MarketplacePlatform?
+  rowCount     Int
+  successCount Int                  @default(0)
+  errorCount   Int                  @default(0)
+  errors       Json?
+  importedAt   DateTime             @default(now())
+}
