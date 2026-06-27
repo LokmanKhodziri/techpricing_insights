@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@config "../../tailwind.config.ts";
+@source "../../node_modules/@tremor/react/dist/**/*.{js,mjs,cjs}";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
