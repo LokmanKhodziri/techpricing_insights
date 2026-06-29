@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 
 import { PriceTrendChart } from "@/components/charts/price-trend-chart";
+import { ProductsTable } from "@/components/products/products-table";
 import { usePriceTrend } from "@/hooks/use-price-trend";
 import { useProducts } from "@/hooks/use-products";
-import { cn } from "@/lib/utils";
 
 const DEFAULT_SLUG = "nvidia-geforce-rtx-2060-super-8gb";
 
@@ -90,42 +90,12 @@ export default function DashboardPage() {
         )}
 
         {products && products.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Product</th>
-                  <th className="px-4 py-3 font-medium">Category</th>
-                  <th className="px-4 py-3 font-medium">Listings</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => {
-                  const isSelected = product.id === activeProductId;
-
-                  return (
-                    <tr
-                      key={product.id}
-                      className={cn(
-                        "cursor-pointer border-t border-border transition-colors hover:bg-muted/30",
-                        isSelected && "bg-muted/50",
-                      )}
-                      onClick={() => setSelectedId(product.id)}
-                    >
-                      <td className="px-4 py-3">
-                        {product.brand} {product.model}
-                        {product.variant ? ` ${product.variant}` : ""}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {product.category}
-                      </td>
-                      <td className="px-4 py-3">{product.listingCount}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <ProductsTable
+            products={products}
+            activeProductId={activeProductId}
+            onSelect={setSelectedId}
+            linkToDetail
+          />
         )}
       </div>
     </div>

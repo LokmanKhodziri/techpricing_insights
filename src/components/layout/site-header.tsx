@@ -18,6 +18,12 @@ export function SiteHeader() {
             Dashboard
           </Link>
           <Link
+            href="/products"
+            className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+          >
+            Products
+          </Link>
+          <Link
             href="/imports"
             className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
           >

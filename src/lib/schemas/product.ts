@@ -35,8 +35,13 @@ export const productSpecsSchema = z.discriminatedUnion("category", [
   }),
 ]);
 
+export const productSlugSchema = z
+  .string()
+  .min(1)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid product slug");
+
 export const createProductSchema = z.object({
-  slug: z.string().min(1),
+  slug: productSlugSchema,
   category: productCategorySchema,
   brand: z.string().min(1),
   model: z.string().min(1),

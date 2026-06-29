@@ -36,6 +36,7 @@ export function useImportUpload() {
     mutationFn: postImport,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.invalidateQueries({ queryKey: ["price-trend"] });
     },
   });

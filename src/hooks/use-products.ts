@@ -1,16 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { ProductCategory } from "@/lib/schemas/common";
-
-export type ProductSummary = {
-  id: string;
-  slug: string;
-  category: ProductCategory;
-  brand: string;
-  model: string;
-  variant: string | null;
-  listingCount: number;
-};
+import type { ProductSummary } from "@/types/catalog";
 
 export type ProductsResponse = {
   items: ProductSummary[];

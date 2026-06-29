@@ -1,19 +1,19 @@
 import { NextRequest } from "next/server";
 
 import { apiError, apiSuccess, notFound } from "@/lib/errors/api-response";
-import { objectIdSchema } from "@/lib/schemas/common";
-import { getProductById } from "@/lib/services/catalog/product-queries";
+import { productSlugSchema } from "@/lib/schemas/product";
+import { getProductBySlug } from "@/lib/services/catalog/product-queries";
 
 type RouteContext = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 };
 
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
-    const { id } = await context.params;
-    objectIdSchema.parse(id);
+    const { slug } = await context.params;
+    productSlugSchema.parse(slug);
 
-    const product = await getProductById(id);
+    const product = await getProductBySlug(slug);
 
     if (!product) {
       return apiError(notFound("Product"));
