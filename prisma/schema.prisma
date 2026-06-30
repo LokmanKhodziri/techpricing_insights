@@ -43,21 +43,28 @@ enum AliasSource {
   IMPORT
 }
 
+enum NormalizationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Product {
-  id         String          @id @default(auto()) @map("_id") @db.ObjectId
-  slug       String          @unique
-  category   ProductCategory
-  brand      String
-  model      String
-  variant    String?
-  specs      Json
-  matchKey   String          @unique
-  aliases    String[]
-  msrpSen    Int?
-  listings   Listing[]
-  aliasesRef ProductAlias[]
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  id                      String                    @id @default(auto()) @map("_id") @db.ObjectId
+  slug                    String                    @unique
+  category                ProductCategory
+  brand                   String
+  model                   String
+  variant                 String?
+  specs                   Json
+  matchKey                String                    @unique
+  aliases                 String[]
+  msrpSen                 Int?
+  listings                Listing[]
+  aliasesRef              ProductAlias[]
+  normalizationCandidates NormalizationCandidate[]
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
 
   @@index([category, brand])
   @@index([brand, model])
@@ -113,4 +120,24 @@ model ImportBatch {
   errorCount   Int                  @default(0)
   errors       Json?
   importedAt   DateTime             @default(now())
+}
+
+model NormalizationCandidate {
+  id                 String               @id @default(auto()) @map("_id") @db.ObjectId
+  titleRaw           String
+  titleNormalized    String               @unique
+  suggestedProductId String?              @db.ObjectId
+  suggestedProduct   Product?             @relation(fields: [suggestedProductId], references: [id])
+  suggestedMatchKey  String?
+  confidence         Float                @default(0)
+  matchSource        AliasSource?
+  status             NormalizationStatus  @default(PENDING)
+  occurrenceCount    Int                  @default(1)
+  importBatchId      String?              @db.ObjectId
+  lastSeenAt         DateTime             @default(now())
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([status, lastSeenAt(sort: Desc)])
+  @@index([suggestedProductId])
 }

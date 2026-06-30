@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -277,9 +278,21 @@ export function ImportUploadForm() {
           <div>
             <p className="font-medium text-foreground">Import complete</p>
             <p className="text-sm text-muted-foreground">
-              {result.successCount} imported · {result.errorCount} failed ·{" "}
+              {result.successCount} imported · {result.queuedCount} queued for
+              review · {result.errorCount - result.queuedCount} failed ·{" "}
               {result.rowCount} total rows
             </p>
+            {result.queuedCount > 0 && (
+              <Link
+                href="/normalization"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "mt-3 inline-flex",
+                )}
+              >
+                Review unmatched titles
+              </Link>
+            )}
           </div>
 
           {Array.isArray(result.errors) && result.errors.length > 0 && (

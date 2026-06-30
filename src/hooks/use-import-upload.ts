@@ -1,19 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { ImportFileInput } from "@/lib/schemas/listing";
+import type { ImportListingsResult } from "@/lib/services/ingestion";
 
-export type ImportBatchResult = {
-  id: string;
-  fileName: string;
-  fileFormat: string;
-  rowCount: number;
-  successCount: number;
-  errorCount: number;
-  errors: Array<{ row: number; message: string }> | null;
-  importedAt: string;
-};
-
-async function postImport(payload: ImportFileInput): Promise<ImportBatchResult> {
+async function postImport(payload: ImportFileInput): Promise<ImportListingsResult> {
   const response = await fetch("/api/imports", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -26,7 +16,7 @@ async function postImport(payload: ImportFileInput): Promise<ImportBatchResult> 
     throw new Error(json.error?.message ?? "Import failed");
   }
 
-  return json.data as ImportBatchResult;
+  return json.data as ImportListingsResult;
 }
 
 export function useImportUpload() {
@@ -38,6 +28,9 @@ export function useImportUpload() {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.invalidateQueries({ queryKey: ["price-trend"] });
+      queryClient.invalidateQueries({ queryKey: ["normalization-candidates"] });
     },
   });
 }
+
+export type { ImportListingsResult as ImportBatchResult };

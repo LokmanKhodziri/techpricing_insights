@@ -29,6 +29,12 @@ export function SiteHeader() {
           >
             Imports
           </Link>
+          <Link
+            href="/normalization"
+            className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+          >
+            Review
+          </Link>
         </nav>
       </div>
     </header>
