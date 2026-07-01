@@ -1,11 +1,12 @@
 import { NextRequest } from "next/server";
 
-import { apiError, apiSuccess } from "@/lib/errors/api-response";
+import { apiSuccess } from "@/lib/errors/api-response";
+import { withApiHandler } from "@/lib/errors/with-api-handler";
 import { paginationSchema, productCategorySchema } from "@/lib/schemas/common";
 import { listProducts } from "@/lib/services/catalog/product-queries";
 
 export async function GET(request: NextRequest) {
-  try {
+  return withApiHandler(async () => {
     const { searchParams } = request.nextUrl;
     const { page, pageSize } = paginationSchema.parse({
       page: searchParams.get("page") ?? undefined,
@@ -18,9 +19,6 @@ export async function GET(request: NextRequest) {
       : undefined;
 
     const data = await listProducts({ category, page, pageSize });
-
     return apiSuccess(data);
-  } catch (error) {
-    return apiError(error);
-  }
+  });
 }

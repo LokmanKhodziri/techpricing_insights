@@ -1,18 +1,24 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { apiError, apiSuccess, notFound } from "@/lib/errors/api-response";
+import { apiSuccess, notFound } from "@/lib/errors/api-response";
+import { withApiHandler } from "@/lib/errors/with-api-handler";
 import { objectIdSchema } from "@/lib/schemas/common";
 import { buildPriceTrend } from "@/lib/services/analytics/price-trend";
+import { parseParams } from "@/lib/validation/parse-request";
+
+const routeParamsSchema = z.object({
+  id: objectIdSchema,
+});
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
 export async function GET(_request: NextRequest, context: RouteContext) {
-  try {
-    const { id } = await context.params;
-    objectIdSchema.parse(id);
+  return withApiHandler(async () => {
+    const { id } = parseParams(await context.params, routeParamsSchema);
 
     const product = await db.product.findUnique({
       where: { id },
@@ -34,7 +40,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     });
 
     if (!product) {
-      return apiError(notFound("Product"));
+      throw notFound("Product");
     }
 
     const productName = [product.brand, product.model, product.variant]
@@ -49,7 +55,5 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     );
 
     return apiSuccess(trend);
-  } catch (error) {
-    return apiError(error);
-  }
+  });
 }

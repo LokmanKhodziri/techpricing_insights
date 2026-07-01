@@ -1,24 +1,26 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { AppError } from "@/lib/errors/app-error";
-import { apiError, apiSuccess } from "@/lib/errors/api-response";
-import { approveCandidateSchema } from "@/lib/schemas/normalization";
+import { apiSuccess } from "@/lib/errors/api-response";
+import { withApiHandler } from "@/lib/errors/with-api-handler";
 import { objectIdSchema } from "@/lib/schemas/common";
+import { approveCandidateSchema } from "@/lib/schemas/normalization";
 import { approveCandidate } from "@/lib/services/normalization/approve-alias";
 import { rejectCandidate } from "@/lib/services/normalization/candidates";
+import { parseJsonBody, parseParams } from "@/lib/validation/parse-request";
+
+const routeParamsSchema = z.object({
+  id: objectIdSchema,
+});
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
 export async function POST(request: NextRequest, context: RouteContext) {
-  try {
-    const { id } = await context.params;
-    objectIdSchema.parse(id);
-
-    const body = await request.json();
-    const input = approveCandidateSchema.parse(body);
+  return withApiHandler(async () => {
+    const { id } = parseParams(await context.params, routeParamsSchema);
+    const input = await parseJsonBody(request, approveCandidateSchema);
 
     const candidate = await approveCandidate({
       candidateId: id,
@@ -26,25 +28,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
     });
 
     return apiSuccess(candidate);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return apiError(
-        new AppError("VALIDATION_ERROR", "Invalid approval payload", 400, error),
-      );
-    }
-
-    return apiError(error);
-  }
+  });
 }
 
 export async function DELETE(_request: NextRequest, context: RouteContext) {
-  try {
-    const { id } = await context.params;
-    objectIdSchema.parse(id);
-
+  return withApiHandler(async () => {
+    const { id } = parseParams(await context.params, routeParamsSchema);
     const candidate = await rejectCandidate(id);
     return apiSuccess(candidate);
-  } catch (error) {
-    return apiError(error);
-  }
+  });
 }

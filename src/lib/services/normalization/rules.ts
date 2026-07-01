@@ -1,6 +1,7 @@
 import { normalizeTitle } from "@/lib/services/normalization/tokenizer";
 
 const TITLE_TRANSFORMATIONS: Array<(value: string) => string> = [
+  (value) => value.replace(/\b(rtx|gtx|rx)(\d{4})s\b/g, "$1 $2 super"),
   (value) => value.replace(/\b(rtx|gtx|rx)(\d{4})\b/g, "$1 $2"),
   (value) => value.replace(/\b(\d{4})s\b/g, "$1 super"),
   (value) => value.replace(/\b(\d+)g\b/g, "$1gb"),
