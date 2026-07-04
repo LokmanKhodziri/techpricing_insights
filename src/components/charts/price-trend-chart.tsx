@@ -3,6 +3,7 @@
 import { Card, LineChart, Title } from "@tremor/react";
 
 import { formatMyrFromSen } from "@/lib/format";
+import { calculateMarginVsMsrp } from "@/lib/services/analytics/margin";
 import type { PriceTrendSummary } from "@/lib/services/analytics/price-trend";
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -27,6 +28,11 @@ export function PriceTrendChart({ trend }: PriceTrendChartProps) {
   const colors = categories.map(
     (platform) => PLATFORM_COLORS[platform] ?? "gray",
   );
+
+  const margin =
+    trend.latestMyr !== null && trend.msrpMyr !== null
+      ? calculateMarginVsMsrp(trend.latestMyr, trend.msrpMyr)
+      : null;
 
   return (
     <Card className="rounded-xl border border-border bg-card p-6 shadow-none">
@@ -69,6 +75,19 @@ export function PriceTrendChart({ trend }: PriceTrendChartProps) {
               <p className="text-muted-foreground">MSRP</p>
               <p className="font-medium text-foreground">
                 {formatMyr(trend.msrpMyr)}
+              </p>
+            </div>
+          )}
+          {margin && (
+            <div>
+              <p className="text-muted-foreground">vs MSRP</p>
+              <p
+                className={`font-medium ${
+                  margin.isBelowMsrp ? "text-emerald-600" : "text-amber-600"
+                }`}
+              >
+                {margin.isBelowMsrp ? "−" : "+"}
+                {Math.abs(margin.discountPercent).toFixed(1)}%
               </p>
             </div>
           )}

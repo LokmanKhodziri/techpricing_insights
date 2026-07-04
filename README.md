@@ -1,36 +1,162 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TechPrising Insights
 
-## Getting Started
+Data-driven pricing intelligence for PC hardware in the Malaysia market. Upload marketplace exports, normalize product titles, track price trends, and compare listings against MSRP.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **CSV/JSON import** — Upload Shopee, Lazada, and other marketplace exports
+- **Title normalization** — Map variants like `RTX 2060S` → canonical RTX 2060 Super
+- **Review queue** — Manually approve unmatched titles and create permanent aliases
+- **Price trends** — Tremor charts with platform comparison (Shopee vs Lazada)
+- **MSRP margin** — Discount % vs manufacturer suggested retail price
+- **Product catalog** — Specs, aliases, and listing history per component
+
+## Tech stack
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16 (App Router) |
+| UI | Tailwind CSS v4, Shadcn/UI, Tremor |
+| Database | MongoDB Atlas + Prisma 6 |
+| Data fetching | TanStack Query |
+| Validation | Zod |
+| Tests | Vitest |
+
+## Architecture
+
+```text
+src/
+├── app/                    # Pages + API routes (thin controllers)
+│   ├── api/                # REST endpoints
+│   ├── dashboard/          # Analytics overview
+│   ├── products/           # Catalog + detail pages
+│   ├── imports/            # File upload
+│   └── normalization/      # Review queue
+├── components/             # Feature UI (products, charts, imports)
+├── hooks/                  # TanStack Query hooks
+├── lib/
+│   ├── schemas/            # Zod validators
+│   ├── parsers/            # CSV/JSON parsing
+│   ├── services/           # Business logic
+│   │   ├── catalog/        # Product queries
+│   │   ├── ingestion/      # Import pipeline
+│   │   ├── normalization/  # Title matching + aliases
+│   │   └── analytics/      # Trends + margins
+│   ├── errors/             # AppError + API helpers
+│   └── validation/         # Request parsing utilities
+└── types/                  # Shared TypeScript DTOs
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Data flow
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+CSV upload → parser → Zod validation → normalization pipeline → Listing
+                                              ↓ (unmatched)
+                                    NormalizationCandidate queue
+                                              ↓ (manual approve)
+                                         ProductAlias
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Getting started
 
-## Learn More
+### Prerequisites
 
-To learn more about Next.js, take a look at the following resources:
+- Node.js 20+
+- MongoDB (Atlas recommended) or Docker
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Setup
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+# Install dependencies
+npm install --legacy-peer-deps
 
-## Deploy on Vercel
+# Configure environment
+cp .env.example .env
+# Edit DATABASE_URL — see notes below for Atlas password encoding
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Push schema to MongoDB
+npm run db:push
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Seed sample products + listings
+npm run db:seed
+
+# Start dev server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+### Docker MongoDB (optional)
+
+```bash
+docker compose up -d
+npm run db:push && npm run db:seed
+```
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm test` | Run unit + integration tests |
+| `npm run test:watch` | Tests in watch mode |
+| `npm run db:push` | Sync Prisma schema to MongoDB |
+| `npm run db:seed` | Load sample GPU/CPU/RAM data |
+| `npm run db:studio` | Prisma Studio GUI |
+
+## Environment variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | MongoDB connection string |
+
+**Atlas URL format** (database name is required):
+
+```text
+mongodb+srv://USER:PASSWORD@cluster.mongodb.net/techpricing_insights?retryWrites=true&w=majority
+```
+
+URL-encode special characters in passwords (`@` → `%40`, `#` → `%23`).
+
+## API endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/health` | Health check + DB connectivity |
+| GET | `/api/products` | List products |
+| GET | `/api/products/slug/[slug]` | Product detail |
+| GET | `/api/products/[id]/price-trend` | Price trend data |
+| POST | `/api/imports` | Import CSV/JSON rows |
+| GET | `/api/normalization/candidates` | Pending review queue |
+| POST | `/api/normalization/candidates/[id]` | Approve alias mapping |
+| DELETE | `/api/normalization/candidates/[id]` | Reject candidate |
+
+All responses follow `{ success, data }` or `{ success, error: { code, message } }`.
+
+## Deploy to Vercel
+
+1. Push the repo to GitHub
+2. Import project in [Vercel](https://vercel.com/new)
+3. Add environment variable: `DATABASE_URL` (your Atlas connection string)
+4. In Atlas → Network Access, allow `0.0.0.0/0` (or Vercel IP ranges)
+5. Deploy — Vercel runs `prisma generate` via `postinstall` automatically
+
+After first deploy, seed production if needed:
+
+```bash
+npm run db:seed
+```
+
+Verify deployment: `GET https://your-app.vercel.app/api/health`
+
+## Sample data workflow
+
+1. **Dashboard** — View RTX 2060 Super price trend
+2. **Imports** — Upload `public/samples/shopee-export-sample.csv`
+3. **Review** — Upload `public/samples/unmatched-export-sample.csv`, approve mappings
+4. **Products** — Browse catalog, open product detail with chart + specs
+
+## License
+
+Private portfolio project.
