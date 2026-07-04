@@ -1,18 +1,34 @@
 "use client";
 
-import { useProducts } from "@/hooks/use-products";
-import { ProductsTable } from "@/components/products/products-table";
+import { Suspense } from "react";
 
-export default function ProductsPage() {
-  const { data: products, isLoading, isError, error } = useProducts();
+import {
+  ProductCategoryFilter,
+  useProductCategoryFilter,
+} from "@/components/products/product-category-filter";
+import { ProductsTable } from "@/components/products/products-table";
+import { CATEGORY_LABELS } from "@/lib/constants/platforms";
+import { useProducts } from "@/hooks/use-products";
+
+function ProductsPageContent() {
+  const { category } = useProductCategoryFilter();
+  const { data, isLoading, isError, error } = useProducts(category);
+
+  const products = data?.items ?? [];
+  const total = data?.total ?? 0;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
-        <p className="text-sm text-muted-foreground">
-          Canonical hardware catalog with normalized specs and listing coverage.
-        </p>
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
+          <p className="text-sm text-muted-foreground">
+            Canonical hardware catalog with normalized specs and listing
+            coverage.
+          </p>
+        </div>
+
+        <ProductCategoryFilter />
       </div>
 
       {isLoading && (
@@ -23,17 +39,47 @@ export default function ProductsPage() {
         <p className="text-sm text-destructive">{(error as Error).message}</p>
       )}
 
-      {products && products.length === 0 && (
+      {!isLoading && !isError && products.length === 0 && (
         <div className="rounded-xl border border-dashed border-border p-8 text-sm text-muted-foreground">
-          No products yet. Run{" "}
-          <code className="rounded bg-muted px-1 py-0.5">npm run db:seed</code>{" "}
-          to load sample data.
+          {category ? (
+            <>
+              No {CATEGORY_LABELS[category]} products found. Try another
+              category or run{" "}
+              <code className="rounded bg-muted px-1 py-0.5">npm run db:seed</code>.
+            </>
+          ) : (
+            <>
+              No products yet. Run{" "}
+              <code className="rounded bg-muted px-1 py-0.5">npm run db:seed</code>{" "}
+              to load sample data.
+            </>
+          )}
         </div>
       )}
 
-      {products && products.length > 0 && (
-        <ProductsTable products={products} linkToDetail />
+      {products.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {total} product{total === 1 ? "" : "s"}
+            {category ? ` in ${CATEGORY_LABELS[category]}` : ""}
+          </p>
+          <ProductsTable products={products} linkToDetail />
+        </div>
       )}
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-6xl px-4 py-10 text-sm text-muted-foreground">
+          Loading products...
+        </div>
+      }
+    >
+      <ProductsPageContent />
+    </Suspense>
   );
 }

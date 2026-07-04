@@ -10,12 +10,13 @@ import { useProducts } from "@/hooks/use-products";
 const DEFAULT_SLUG = "nvidia-geforce-rtx-2060-super-8gb";
 
 export default function DashboardPage() {
-  const { data: products, isLoading, isError, error } = useProducts();
+  const { data, isLoading, isError, error } = useProducts();
+  const products = data?.items ?? [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const activeProductId = useMemo(() => {
     if (selectedId) return selectedId;
-    if (!products?.length) return null;
+    if (!products.length) return null;
 
     const rtx2060 = products.find((product) => product.slug === DEFAULT_SLUG);
     return rtx2060?.id ?? products[0].id;
@@ -52,7 +53,7 @@ export default function DashboardPage() {
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-lg font-medium">Products</h2>
-          {products && products.length > 0 && (
+          {products.length > 0 && (
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
               Chart product
               <select
@@ -81,7 +82,7 @@ export default function DashboardPage() {
           </p>
         )}
 
-        {products && products.length === 0 && (
+        {!isLoading && !isError && products.length === 0 && (
           <div className="rounded-xl border border-dashed border-border p-8 text-sm text-muted-foreground">
             No products yet. Run{" "}
             <code className="rounded bg-muted px-1 py-0.5">npm run db:seed</code>{" "}

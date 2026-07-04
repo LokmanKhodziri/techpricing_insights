@@ -9,7 +9,22 @@ export const PLATFORM_LABELS: Record<MarketplacePlatform, string> = {
   OTHER: "Other",
 };
 
-export const CATEGORY_LABELS: Record<string, string> = {
+import type { ProductCategory } from "@/lib/schemas/common";
+
+export const PRODUCT_CATEGORIES: ProductCategory[] = [
+  "GPU",
+  "CPU",
+  "RAM",
+  "MOTHERBOARD",
+  "STORAGE",
+  "PSU",
+  "CASE",
+  "COOLING",
+  "PERIPHERAL",
+  "OTHER",
+];
+
+export const CATEGORY_LABELS: Record<ProductCategory, string> = {
   CPU: "CPU",
   GPU: "GPU",
   RAM: "RAM",

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
+import type { ProductCategory } from "@/lib/schemas/common";
 import type { ProductSummary } from "@/types/catalog";
 
 export type ProductsResponse = {
@@ -9,21 +10,30 @@ export type ProductsResponse = {
   pageSize: number;
 };
 
-async function fetchProducts(): Promise<ProductSummary[]> {
-  const response = await fetch("/api/products");
+async function fetchProducts(
+  category?: ProductCategory,
+): Promise<ProductsResponse> {
+  const params = new URLSearchParams();
+  if (category) {
+    params.set("category", category);
+  }
+
+  const query = params.toString();
+  const response = await fetch(
+    query ? `/api/products?${query}` : "/api/products",
+  );
   const json = await response.json();
 
   if (!response.ok || !json.success) {
     throw new Error(json.error?.message ?? "Failed to fetch products");
   }
 
-  const data = json.data as ProductsResponse;
-  return data.items;
+  return json.data as ProductsResponse;
 }
 
-export function useProducts() {
+export function useProducts(category?: ProductCategory | null) {
   return useQuery({
-    queryKey: ["products"],
-    queryFn: fetchProducts,
+    queryKey: ["products", category ?? "all"],
+    queryFn: () => fetchProducts(category ?? undefined),
   });
 }

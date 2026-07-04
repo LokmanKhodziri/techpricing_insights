@@ -93,12 +93,14 @@ function CandidateRow({
 }
 
 export function CandidateReviewTable() {
-  const { data, isLoading, isError, error } = useNormalizationCandidates();
-  const { data: products } = useProducts();
+  const { data: candidatesData, isLoading, isError, error } =
+    useNormalizationCandidates();
+  const { data: productsData } = useProducts();
+  const products = productsData?.items ?? [];
 
   const productOptions = useMemo(
     () =>
-      (products ?? []).map((product) => ({
+      products.map((product) => ({
         id: product.id,
         label: `${product.brand} ${product.model}${
           product.variant ? ` ${product.variant}` : ""
@@ -119,7 +121,7 @@ export function CandidateReviewTable() {
     );
   }
 
-  const candidates = data?.items ?? [];
+  const candidates = candidatesData?.items ?? [];
 
   if (candidates.length === 0) {
     return (
