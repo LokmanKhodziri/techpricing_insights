@@ -291,7 +291,7 @@ function myrToSen(myr: number): number {
 }
 
 async function main() {
-  console.log("Seeding TechPrising Insights database...\n");
+  console.log("Seeding CariPart database...\n");
 
   let productCount = 0;
   let aliasCount = 0;

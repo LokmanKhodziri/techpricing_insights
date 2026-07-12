@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
+import { APP_NAME } from "@/lib/constants/brand";
 import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
@@ -8,7 +9,7 @@ export function SiteHeader() {
     <header className="border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="font-semibold tracking-tight">
-          TechPrising Insights
+          {APP_NAME}
         </Link>
         <nav className="flex items-center gap-2">
           <Link

@@ -34,7 +34,8 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
         <p className="text-sm text-muted-foreground">
-          Pricing trends and product coverage across Malaysian marketplaces.
+          Local MYR price trends across Malaysian marketplaces (Shopee, Lazada,
+          and more).
         </p>
       </div>
 

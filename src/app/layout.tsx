@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { SiteHeader } from "@/components/layout/site-header";
+import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants/brand";
 import { QueryProvider } from "@/providers/query-provider";
 
 import "./globals.css";
@@ -17,9 +18,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TechPrising Insights",
-  description:
-    "Data-driven pricing intelligence for PC hardware in the Malaysia market.",
+  title: {
+    default: APP_NAME,
+    template: `%s · ${APP_NAME}`,
+  },
+  description: APP_DESCRIPTION,
 };
 
 export default function RootLayout({

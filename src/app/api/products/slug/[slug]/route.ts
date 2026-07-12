@@ -3,7 +3,6 @@ import { z } from "zod";
 
 import { apiSuccess, notFound } from "@/lib/errors/api-response";
 import { withApiHandler } from "@/lib/errors/with-api-handler";
-import { objectIdSchema } from "@/lib/schemas/common";
 import { productSlugSchema } from "@/lib/schemas/product";
 import { getProductBySlug } from "@/lib/services/catalog/product-queries";
 import { parseParams } from "@/lib/validation/parse-request";

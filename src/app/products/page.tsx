@@ -23,8 +23,8 @@ function ProductsPageContent() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
           <p className="text-sm text-muted-foreground">
-            Canonical hardware catalog with normalized specs and listing
-            coverage.
+            Browse PC parts sold in Malaysia — filter by CPU, GPU, RAM, and
+            more.
           </p>
         </div>
 

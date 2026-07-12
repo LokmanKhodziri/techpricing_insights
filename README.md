@@ -1,10 +1,10 @@
-# TechPrising Insights
+# CariPart
 
-Data-driven pricing intelligence for PC hardware in the Malaysia market. Upload marketplace exports, normalize product titles, track price trends, and compare listings against MSRP.
+Cari harga PC parts Malaysia. Compare GPU, CPU, RAM, and other component prices from Shopee, Lazada, and local marketplaces — then track MYR trends and deals.
 
 ## Features
 
-- **CSV/JSON import** — Upload Shopee, Lazada, and other marketplace exports
+- **CSV/JSON import** — Upload Shopee, Lazada, and other Malaysian marketplace exports
 - **Title normalization** — Map variants like `RTX 2060S` → canonical RTX 2060 Super
 - **Review queue** — Manually approve unmatched titles and create permanent aliases
 - **Price trends** — Tremor charts with platform comparison (Shopee vs Lazada)
@@ -68,7 +68,7 @@ CSV upload → parser → Zod validation → normalization pipeline → Listing
 
 ```bash
 # Install dependencies
-npm install --legacy-peer-deps
+npm install
 
 # Configure environment
 cp .env.example .env
@@ -101,9 +101,25 @@ npm run db:push && npm run db:seed
 | `npm run build` | Production build |
 | `npm test` | Run unit + integration tests |
 | `npm run test:watch` | Tests in watch mode |
+| `npm run typecheck` | TypeScript check (`tsc --noEmit`) |
+| `npm run lint` | ESLint |
 | `npm run db:push` | Sync Prisma schema to MongoDB |
 | `npm run db:seed` | Load sample GPU/CPU/RAM data |
 | `npm run db:studio` | Prisma Studio GUI |
+
+## CI
+
+GitHub Actions runs on every push and pull request to `main` / `master`:
+
+1. Install dependencies (`npm ci`)
+2. Lint
+3. Typecheck
+4. Unit + integration tests
+5. Production build
+
+Workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+
+No live MongoDB is required in CI — a placeholder `DATABASE_URL` is used for Prisma client generation and env validation.
 
 ## Environment variables
 
@@ -114,10 +130,12 @@ npm run db:push && npm run db:seed
 **Atlas URL format** (database name is required):
 
 ```text
-mongodb+srv://USER:PASSWORD@cluster.mongodb.net/techpricing_insights?retryWrites=true&w=majority
+mongodb+srv://USER:PASSWORD@cluster.mongodb.net/caripart?retryWrites=true&w=majority
 ```
 
 URL-encode special characters in passwords (`@` → `%40`, `#` → `%23`).
+
+If you already have data under an older database name (e.g. `techpricing_insights`), you can keep that path in `DATABASE_URL` — only the app branding changed.
 
 ## API endpoints
 

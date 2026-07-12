@@ -6,8 +6,8 @@ export default function ImportsPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Imports</h1>
         <p className="text-sm text-muted-foreground">
-          Upload marketplace CSV or JSON exports. Rows are validated with Zod,
-          matched to product aliases, and stored as append-only listings.
+          Upload Shopee or Lazada CSV/JSON exports. Rows are validated, matched
+          to local PC part aliases, and stored as MYR price history.
         </p>
       </div>
 

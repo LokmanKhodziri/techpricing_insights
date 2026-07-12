@@ -7,7 +7,7 @@ export default defineConfig({
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.integration.test.ts"],
     env: {
-      DATABASE_URL: "mongodb://localhost:27017/techpricing_insights_test",
+      DATABASE_URL: "mongodb://localhost:27017/caripart_test",
     },
   },
   resolve: {
