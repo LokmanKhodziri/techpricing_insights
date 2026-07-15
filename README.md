@@ -4,18 +4,27 @@ Cari harga PC parts Malaysia. Compare GPU, CPU, RAM, and other component prices 
 
 ## Features
 
-- **CSV/JSON import** — Upload Shopee, Lazada, and other Malaysian marketplace exports
-- **Title normalization** — Map variants like `RTX 2060S` → canonical RTX 2060 Super
-- **Review queue** — Manually approve unmatched titles and create permanent aliases
+- **Public price browsing** — Dashboard, catalog, and charts are open to everyone
+- **Contributor-gated imports** — Only admins/contributors can upload CSV/JSON
+- **Normalization review** — Approve unmatched titles into permanent aliases
+- **Admin role management** — Promote trusted users to contributor or admin
 - **Price trends** — Tremor charts with platform comparison (Shopee vs Lazada)
 - **MSRP margin** — Discount % vs manufacturer suggested retail price
-- **Product catalog** — Specs, aliases, and listing history per component
+
+## Access model
+
+| Role | Who | Can do |
+|------|-----|--------|
+| Viewer (default) | Anyone / signed-in users without a role | Browse dashboard & products |
+| Contributor | Promoted by admin | Imports + Review |
+| Admin | You (first) | Contributor access + `/admin` role management |
 
 ## Tech stack
 
 | Layer | Technology |
 |-------|------------|
 | Framework | Next.js 16 (App Router) |
+| Auth | Clerk (RBAC via `publicMetadata.role`) |
 | UI | Tailwind CSS v4, Shadcn/UI, Tremor |
 | Database | MongoDB Atlas + Prisma 6 |
 | Data fetching | TanStack Query |
@@ -72,7 +81,7 @@ npm install
 
 # Configure environment
 cp .env.example .env
-# Edit DATABASE_URL — see notes below for Atlas password encoding
+# Edit DATABASE_URL + Clerk keys (see Auth setup below)
 
 # Push schema to MongoDB
 npm run db:push
@@ -85,6 +94,29 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+### Auth setup (Clerk)
+
+1. Create an app at [dashboard.clerk.com](https://dashboard.clerk.com)
+2. Copy **Publishable key** and **Secret key** into `.env`
+3. Sessions → Customize session token → save:
+
+```json
+{
+  "metadata": "{{user.public_metadata}}"
+}
+```
+
+4. Sign up once in the app, then in Clerk → Users → your user → Public metadata:
+
+```json
+{
+  "role": "admin"
+}
+```
+
+5. Sign out / sign in again so the role appears in the session
+6. Open `/admin` to promote other users to `contributor` or `admin`
 
 ### Docker MongoDB (optional)
 
@@ -126,6 +158,10 @@ No live MongoDB is required in CI — a placeholder `DATABASE_URL` is used for P
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | MongoDB connection string |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes | Clerk publishable key |
+| `CLERK_SECRET_KEY` | Yes | Clerk secret key |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | No | Default `/sign-in` |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | No | Default `/sign-up` |
 
 **Atlas URL format** (database name is required):
 

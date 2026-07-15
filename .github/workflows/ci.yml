@@ -18,6 +18,11 @@ jobs:
     env:
       # Prisma generate + env validation need a URL; no live DB required in CI
       DATABASE_URL: mongodb://localhost:27017/caripart_ci
+      # Placeholder Clerk keys so production build can resolve ClerkProvider
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2FyaXBhcnQtY2kuZXhhbXBsZS5jbGVyay5hY2NvdW50cy5kZXYk
+      CLERK_SECRET_KEY: sk_test_placeholder_for_ci_build_only
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
 
     steps:
       - name: Checkout
