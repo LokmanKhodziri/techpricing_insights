@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { ProductMsrpEditor } from "@/components/products/product-msrp-editor";
 import { CATEGORY_LABELS, PLATFORM_LABELS } from "@/lib/constants/platforms";
 import { formatMyrFromSen } from "@/lib/format";
 import type { ProductDetail } from "@/types/catalog";
@@ -170,6 +171,11 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
   return (
     <div className="space-y-6">
       <ProductHeader product={product} />
+      <ProductMsrpEditor
+        productId={product.id}
+        slug={product.slug}
+        msrpSen={product.msrpSen}
+      />
       <div className="grid gap-6 lg:grid-cols-2">
         <ProductSpecs specs={product.specs} />
         <ProductAliases aliases={product.aliasesRef} />
