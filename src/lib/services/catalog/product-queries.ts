@@ -36,6 +36,7 @@ const productDetailInclude = {
       originalPriceSen: true,
       capturedAt: true,
       sellerName: true,
+      sourceUrl: true,
     },
   },
   _count: { select: { listings: true } },
@@ -71,6 +72,7 @@ type ProductDetailRecord = {
     originalPriceSen: number | null;
     capturedAt: Date;
     sellerName: string | null;
+    sourceUrl: string | null;
   }>;
   _count: { listings: number };
 };
@@ -112,6 +114,7 @@ function toProductDetail(product: ProductDetailRecord): ProductDetail {
       originalPriceSen: listing.originalPriceSen,
       capturedAt: listing.capturedAt.toISOString(),
       sellerName: listing.sellerName,
+      sourceUrl: listing.sourceUrl,
     })),
   };
 }

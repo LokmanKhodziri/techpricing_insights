@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 
-import { CATEGORY_LABELS } from "@/lib/constants/platforms";
+import { buttonVariants } from "@/components/ui/button";
+import { CATEGORY_LABELS, PLATFORM_LABELS } from "@/lib/constants/platforms";
 import { formatMyrFromSen } from "@/lib/format";
 import type { ProductDetail } from "@/types/catalog";
 import { cn } from "@/lib/utils";
@@ -118,6 +120,7 @@ export function ProductListingsTable({ listings }: ProductListingsTableProps) {
             <th className="px-4 py-3 font-medium">Platform</th>
             <th className="px-4 py-3 font-medium">Title</th>
             <th className="px-4 py-3 font-medium">Price</th>
+            <th className="px-4 py-3 font-medium text-right">Link</th>
           </tr>
         </thead>
         <tbody>
@@ -126,10 +129,30 @@ export function ProductListingsTable({ listings }: ProductListingsTableProps) {
               <td className="px-4 py-3 text-muted-foreground">
                 {new Date(listing.capturedAt).toLocaleDateString("en-MY")}
               </td>
-              <td className="px-4 py-3">{listing.platform}</td>
+              <td className="px-4 py-3">
+                {PLATFORM_LABELS[listing.platform] ?? listing.platform}
+              </td>
               <td className="max-w-xs truncate px-4 py-3">{listing.titleRaw}</td>
               <td className="px-4 py-3 font-medium">
                 {formatMyrFromSen(listing.priceSen)}
+              </td>
+              <td className="px-4 py-3 text-right">
+                {listing.sourceUrl ? (
+                  <a
+                    href={listing.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "sm" }),
+                      "inline-flex items-center gap-1.5",
+                    )}
+                  >
+                    View listing
+                    <ExternalLink className="size-3.5" aria-hidden="true" />
+                  </a>
+                ) : (
+                  <span className="text-xs text-muted-foreground">—</span>
+                )}
               </td>
             </tr>
           ))}
