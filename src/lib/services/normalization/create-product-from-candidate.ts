@@ -7,6 +7,7 @@ import {
   formatProductDraftLabel,
   inferProductDraft,
 } from "@/lib/services/normalization/infer-product-draft";
+import { materializePendingListings } from "@/lib/services/normalization/pending-listings";
 import { buildMatchKey, buildSlug } from "@/lib/services/normalization/tokenizer";
 
 async function ensureUniqueSlug(parts: string[]): Promise<string> {
@@ -103,6 +104,11 @@ export async function createProductFromCandidate(candidateId: string) {
     confidence: 1,
   });
 
+  const listingsCreated = await materializePendingListings({
+    titleNormalized: candidate.titleNormalized,
+    productId: product.id,
+  });
+
   const updatedCandidate = await db.normalizationCandidate.update({
     where: { id: candidateId },
     data: {
@@ -124,6 +130,7 @@ export async function createProductFromCandidate(candidateId: string) {
       variant: product.variant,
       label: formatProductDraftLabel(draft),
     },
+    listingsCreated,
     candidate: updatedCandidate,
   };
 }

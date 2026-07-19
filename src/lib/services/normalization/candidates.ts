@@ -1,4 +1,4 @@
-import type { AliasSource, NormalizationStatus } from "@prisma/client";
+import type { AliasSource, NormalizationStatus, Prisma } from "@prisma/client";
 
 import { db } from "@/lib/db";
 import {
@@ -10,6 +10,10 @@ import {
   formatProductDraftLabel,
   inferProductDraft,
 } from "@/lib/services/normalization/infer-product-draft";
+import {
+  parsePendingListings,
+  type PendingListingPayload,
+} from "@/lib/services/normalization/pending-listings";
 import type { NormalizationResult } from "@/lib/services/normalization/types";
 
 export type NormalizationCandidateSummary = {
@@ -48,6 +52,7 @@ export async function queueNormalizationCandidate(input: {
   titleRaw: string;
   normalization: NormalizationResult;
   importBatchId?: string;
+  pendingListing?: PendingListingPayload;
 }) {
   const existing = await db.normalizationCandidate.findUnique({
     where: { titleNormalized: input.normalization.titleNormalized },
@@ -57,7 +62,21 @@ export async function queueNormalizationCandidate(input: {
     return existing;
   }
 
+  const appendPendingListing = (
+    current: unknown,
+  ): Prisma.InputJsonValue | undefined => {
+    if (!input.pendingListing) {
+      return undefined;
+    }
+
+    const pending = parsePendingListings(current);
+    pending.push(input.pendingListing);
+    return pending as Prisma.InputJsonValue;
+  };
+
   if (existing) {
+    const pendingListings = appendPendingListing(existing.pendingListings);
+
     return db.normalizationCandidate.update({
       where: { id: existing.id },
       data: {
@@ -70,6 +89,7 @@ export async function queueNormalizationCandidate(input: {
         occurrenceCount: { increment: 1 },
         importBatchId: input.importBatchId,
         lastSeenAt: new Date(),
+        ...(pendingListings ? { pendingListings } : {}),
       },
     });
   }
@@ -83,6 +103,9 @@ export async function queueNormalizationCandidate(input: {
       confidence: input.normalization.confidence,
       matchSource: input.normalization.aliasSource,
       importBatchId: input.importBatchId,
+      pendingListings: input.pendingListing
+        ? ([input.pendingListing] as Prisma.InputJsonValue)
+        : [],
     },
   });
 }
