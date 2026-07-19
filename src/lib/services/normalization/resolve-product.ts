@@ -7,6 +7,11 @@ import {
   FUZZY_SUGGEST_THRESHOLD,
   similarityRatio,
 } from "@/lib/services/normalization/similarity";
+import {
+  extractCatalogProductIdentity,
+  extractProductIdentity,
+  identitiesCompatible,
+} from "@/lib/services/normalization/identity";
 import type { NormalizationResult } from "@/lib/services/normalization/types";
 import {
   buildMatchKey,
@@ -28,6 +33,29 @@ async function findMatchKeyProduct(matchKey: string) {
   });
 }
 
+function isCompatibleFuzzyTarget(
+  titleNormalized: string,
+  target: {
+    alias: string;
+    brand: string;
+    model: string;
+    variant: string | null;
+  },
+) {
+  const titleIdentity = extractProductIdentity(titleNormalized);
+  const aliasIdentity = extractProductIdentity(target.alias);
+  const productIdentity = extractCatalogProductIdentity(
+    target.brand,
+    target.model,
+    target.variant,
+  );
+
+  return (
+    identitiesCompatible(titleIdentity, aliasIdentity) &&
+    identitiesCompatible(titleIdentity, productIdentity)
+  );
+}
+
 async function findFuzzyAliasMatch(titleNormalized: string) {
   const aliases = await db.productAlias.findMany({
     select: {
@@ -35,6 +63,13 @@ async function findFuzzyAliasMatch(titleNormalized: string) {
       productId: true,
       confidence: true,
       source: true,
+      product: {
+        select: {
+          brand: true,
+          model: true,
+          variant: true,
+        },
+      },
     },
   });
 
@@ -46,6 +81,17 @@ async function findFuzzyAliasMatch(titleNormalized: string) {
   } | null = null;
 
   for (const alias of aliases) {
+    if (
+      !isCompatibleFuzzyTarget(titleNormalized, {
+        alias: alias.alias,
+        brand: alias.product.brand,
+        model: alias.product.model,
+        variant: alias.product.variant,
+      })
+    ) {
+      continue;
+    }
+
     const score = similarityRatio(titleNormalized, alias.alias);
     if (score < FUZZY_SUGGEST_THRESHOLD) continue;
 

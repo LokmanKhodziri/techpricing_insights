@@ -1,6 +1,15 @@
 import type { AliasSource, NormalizationStatus } from "@prisma/client";
 
 import { db } from "@/lib/db";
+import {
+  extractCatalogProductIdentity,
+  extractProductIdentity,
+  identitiesCompatible,
+} from "@/lib/services/normalization/identity";
+import {
+  formatProductDraftLabel,
+  inferProductDraft,
+} from "@/lib/services/normalization/infer-product-draft";
 import type { NormalizationResult } from "@/lib/services/normalization/types";
 
 export type NormalizationCandidateSummary = {
@@ -15,7 +24,25 @@ export type NormalizationCandidateSummary = {
   status: NormalizationStatus;
   occurrenceCount: number;
   lastSeenAt: string;
+  inferredProductName: string | null;
+  canCreateProduct: boolean;
 };
+
+function isStoredSuggestionValid(input: {
+  titleNormalized: string;
+  brand: string;
+  model: string;
+  variant: string | null;
+}) {
+  const titleIdentity = extractProductIdentity(input.titleNormalized);
+  const productIdentity = extractCatalogProductIdentity(
+    input.brand,
+    input.model,
+    input.variant,
+  );
+
+  return identitiesCompatible(titleIdentity, productIdentity);
+}
 
 export async function queueNormalizationCandidate(input: {
   titleRaw: string;
@@ -72,23 +99,41 @@ export async function listPendingCandidates(limit = 50) {
     },
   });
 
-  return candidates.map((candidate): NormalizationCandidateSummary => ({
-    id: candidate.id,
-    titleRaw: candidate.titleRaw,
-    titleNormalized: candidate.titleNormalized,
-    suggestedProductId: candidate.suggestedProductId,
-    suggestedProductName: candidate.suggestedProduct
-      ? [candidate.suggestedProduct.brand, candidate.suggestedProduct.model, candidate.suggestedProduct.variant]
-          .filter(Boolean)
-          .join(" ")
-      : null,
-    suggestedMatchKey: candidate.suggestedMatchKey,
-    confidence: candidate.confidence,
-    matchSource: candidate.matchSource,
-    status: candidate.status,
-    occurrenceCount: candidate.occurrenceCount,
-    lastSeenAt: candidate.lastSeenAt.toISOString(),
-  }));
+  return candidates.map((candidate): NormalizationCandidateSummary => {
+    const draft = inferProductDraft(candidate.titleRaw);
+    const suggestionIsValid =
+      candidate.suggestedProduct &&
+      isStoredSuggestionValid({
+        titleNormalized: candidate.titleNormalized,
+        brand: candidate.suggestedProduct.brand,
+        model: candidate.suggestedProduct.model,
+        variant: candidate.suggestedProduct.variant,
+      });
+
+    return {
+      id: candidate.id,
+      titleRaw: candidate.titleRaw,
+      titleNormalized: candidate.titleNormalized,
+      suggestedProductId: suggestionIsValid ? candidate.suggestedProductId : null,
+      suggestedProductName: suggestionIsValid
+        ? [
+            candidate.suggestedProduct!.brand,
+            candidate.suggestedProduct!.model,
+            candidate.suggestedProduct!.variant,
+          ]
+            .filter(Boolean)
+            .join(" ")
+        : null,
+      suggestedMatchKey: suggestionIsValid ? candidate.suggestedMatchKey : null,
+      confidence: suggestionIsValid ? candidate.confidence : 0,
+      matchSource: suggestionIsValid ? candidate.matchSource : null,
+      status: candidate.status,
+      occurrenceCount: candidate.occurrenceCount,
+      lastSeenAt: candidate.lastSeenAt.toISOString(),
+      inferredProductName: draft ? formatProductDraftLabel(draft) : null,
+      canCreateProduct: Boolean(draft),
+    };
+  });
 }
 
 export async function rejectCandidate(candidateId: string) {

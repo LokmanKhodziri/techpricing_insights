@@ -1,16 +1,37 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import {
   useApproveCandidate,
+  useCreateProductFromCandidate,
   useRejectCandidate,
 } from "@/hooks/use-normalization-review";
 import { useNormalizationCandidates } from "@/hooks/use-normalization-candidates";
 import { useProducts } from "@/hooks/use-products";
 import type { NormalizationCandidateSummary } from "@/lib/services/normalization/candidates";
 import { cn } from "@/lib/utils";
+
+function buildProductOptions(
+  products: Array<{ id: string; label: string }>,
+  candidate: NormalizationCandidateSummary,
+) {
+  const options = [...products];
+
+  if (
+    candidate.suggestedProductId &&
+    candidate.suggestedProductName &&
+    !options.some((product) => product.id === candidate.suggestedProductId)
+  ) {
+    options.unshift({
+      id: candidate.suggestedProductId,
+      label: candidate.suggestedProductName,
+    });
+  }
+
+  return options;
+}
 
 function CandidateRow({
   candidate,
@@ -19,13 +40,25 @@ function CandidateRow({
   candidate: NormalizationCandidateSummary;
   products: Array<{ id: string; label: string }>;
 }) {
+  const productOptions = useMemo(
+    () => buildProductOptions(products, candidate),
+    [products, candidate],
+  );
   const [productId, setProductId] = useState(
-    candidate.suggestedProductId ?? products[0]?.id ?? "",
+    candidate.suggestedProductId ?? "",
   );
   const approveMutation = useApproveCandidate();
   const rejectMutation = useRejectCandidate();
+  const createProductMutation = useCreateProductFromCandidate();
 
-  const isBusy = approveMutation.isPending || rejectMutation.isPending;
+  useEffect(() => {
+    setProductId(candidate.suggestedProductId ?? "");
+  }, [candidate.id, candidate.suggestedProductId]);
+
+  const isBusy =
+    approveMutation.isPending ||
+    rejectMutation.isPending ||
+    createProductMutation.isPending;
 
   return (
     <tr className="border-t border-border align-top">
@@ -54,9 +87,10 @@ function CandidateRow({
           className="w-full min-w-[180px] rounded-md border border-border bg-background px-2 py-1 text-sm"
           value={productId}
           onChange={(event) => setProductId(event.target.value)}
-          disabled={isBusy || products.length === 0}
+          disabled={isBusy || productOptions.length === 0}
         >
-          {products.map((product) => (
+          <option value="">Select product…</option>
+          {productOptions.map((product) => (
             <option key={product.id} value={product.id}>
               {product.label}
             </option>
@@ -65,6 +99,21 @@ function CandidateRow({
       </td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-2">
+          {candidate.canCreateProduct && (
+            <button
+              type="button"
+              className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}
+              disabled={isBusy}
+              onClick={() => createProductMutation.mutate(candidate.id)}
+              title={
+                candidate.inferredProductName
+                  ? `Create ${candidate.inferredProductName}`
+                  : "Create product"
+              }
+            >
+              Create product
+            </button>
+          )}
           <button
             type="button"
             className={cn(buttonVariants({ size: "sm" }))}
@@ -87,6 +136,11 @@ function CandidateRow({
             Reject
           </button>
         </div>
+        {candidate.canCreateProduct && candidate.inferredProductName && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Will create: {candidate.inferredProductName}
+          </p>
+        )}
       </td>
     </tr>
   );
@@ -95,7 +149,7 @@ function CandidateRow({
 export function CandidateReviewTable() {
   const { data: candidatesData, isLoading, isError, error } =
     useNormalizationCandidates();
-  const { data: productsData } = useProducts();
+  const { data: productsData } = useProducts(null, { pageSize: 100 });
   const products = productsData?.items ?? [];
 
   const productOptions = useMemo(
