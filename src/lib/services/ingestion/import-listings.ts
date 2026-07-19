@@ -1,10 +1,11 @@
-import type { Prisma } from "@prisma/client";
+import type { MarketplacePlatform, Prisma } from "@prisma/client";
 
 import { db } from "@/lib/db";
 import type { ImportFileInput, RawListingRow } from "@/lib/schemas/listing";
 import { createProductAlias } from "@/lib/services/normalization/approve-alias";
 import { queueNormalizationCandidate } from "@/lib/services/normalization/candidates";
 import { resolveProductFromTitle } from "@/lib/services/normalization";
+import type { PendingListingPayload } from "@/lib/services/normalization/pending-listings";
 import type { NormalizationResult } from "@/lib/services/normalization/types";
 
 function parsePriceToSen(value: number | string): number {
@@ -42,6 +43,41 @@ export type ParsedListingRow = {
   matchKey: string | null;
   normalization: NormalizationResult;
 };
+
+function buildPendingListing(
+  parsed: ParsedListingRow,
+  platform: MarketplacePlatform,
+  importBatchId: string,
+): PendingListingPayload {
+  return {
+    platform,
+    platformListingId: parsed.platformListingId,
+    sourceUrl: parsed.sourceUrl,
+    titleRaw: parsed.titleRaw,
+    titleNormalized: parsed.titleNormalized,
+    priceSen: parsed.priceSen,
+    originalPriceSen: parsed.originalPriceSen,
+    shippingSen: parsed.shippingSen,
+    sellerName: parsed.sellerName,
+    sellerId: parsed.sellerId,
+    capturedAt: parsed.capturedAt.toISOString(),
+    importBatchId,
+    rawPayload: parsed.rawPayload,
+  };
+}
+
+async function resolveApprovedProductId(titleNormalized: string) {
+  const candidate = await db.normalizationCandidate.findUnique({
+    where: { titleNormalized },
+    select: { status: true, suggestedProductId: true },
+  });
+
+  if (candidate?.status === "APPROVED" && candidate.suggestedProductId) {
+    return candidate.suggestedProductId;
+  }
+
+  return null;
+}
 
 export async function parseImportRow(
   row: RawListingRow,
@@ -97,12 +133,17 @@ export async function importListings(
   for (const [index, row] of input.rows.entries()) {
     try {
       const parsed = await parseImportRow(row, input.platform);
+      const platform = input.platform ?? "OTHER";
+      let productId =
+        parsed.productId ??
+        (await resolveApprovedProductId(parsed.titleNormalized));
 
-      if (!parsed.productId) {
+      if (!productId) {
         await queueNormalizationCandidate({
           titleRaw: parsed.titleRaw,
           normalization: parsed.normalization,
           importBatchId: batch.id,
+          pendingListing: buildPendingListing(parsed, platform, batch.id),
         });
         queuedCount += 1;
         errors.push({
@@ -114,10 +155,10 @@ export async function importListings(
 
       if (
         parsed.normalization.source === "FUZZY" &&
-        parsed.productId
+        productId
       ) {
         await createProductAlias({
-          productId: parsed.productId,
+          productId,
           titleRaw: parsed.titleRaw,
           titleNormalized: parsed.normalization.titleNormalized,
           source: "FUZZY",
@@ -127,8 +168,8 @@ export async function importListings(
 
       await db.listing.create({
         data: {
-          productId: parsed.productId,
-          platform: input.platform ?? "OTHER",
+          productId,
+          platform,
           platformListingId: parsed.platformListingId,
           sourceUrl: parsed.sourceUrl,
           titleRaw: parsed.titleRaw,

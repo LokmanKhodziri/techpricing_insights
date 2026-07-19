@@ -134,6 +134,7 @@ model NormalizationCandidate {
   status             NormalizationStatus  @default(PENDING)
   occurrenceCount    Int                  @default(1)
   importBatchId      String?              @db.ObjectId
+  pendingListings    Json                 @default("[]")
   lastSeenAt         DateTime             @default(now())
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt

@@ -10,12 +10,20 @@ export type ProductsResponse = {
   pageSize: number;
 };
 
+type FetchProductsOptions = {
+  category?: ProductCategory;
+  pageSize?: number;
+};
+
 async function fetchProducts(
-  category?: ProductCategory,
+  options: FetchProductsOptions = {},
 ): Promise<ProductsResponse> {
   const params = new URLSearchParams();
-  if (category) {
-    params.set("category", category);
+  if (options.category) {
+    params.set("category", options.category);
+  }
+  if (options.pageSize) {
+    params.set("pageSize", String(options.pageSize));
   }
 
   const query = params.toString();
@@ -31,9 +39,17 @@ async function fetchProducts(
   return json.data as ProductsResponse;
 }
 
-export function useProducts(category?: ProductCategory | null) {
+export function useProducts(
+  category?: ProductCategory | null,
+  options?: { pageSize?: number },
+) {
+  const pageSize = options?.pageSize;
   return useQuery({
-    queryKey: ["products", category ?? "all"],
-    queryFn: () => fetchProducts(category ?? undefined),
+    queryKey: ["products", category ?? "all", pageSize ?? "default"],
+    queryFn: () =>
+      fetchProducts({
+        category: category ?? undefined,
+        pageSize,
+      }),
   });
 }

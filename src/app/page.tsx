@@ -22,10 +22,10 @@ export default function HomePage() {
             Open dashboard
           </Link>
           <Link
-            href="/imports"
+            href="/products"
             className={cn(buttonVariants({ variant: "outline" }))}
           >
-            Import local prices
+            Browse PC parts
           </Link>
         </div>
       </section>

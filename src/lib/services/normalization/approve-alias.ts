@@ -2,6 +2,7 @@ import type { AliasSource } from "@prisma/client";
 
 import { db } from "@/lib/db";
 import { AppError } from "@/lib/errors/app-error";
+import { materializePendingListings } from "@/lib/services/normalization/pending-listings";
 import { normalizeTitle } from "@/lib/services/normalization/tokenizer";
 
 export async function createProductAlias(input: {
@@ -79,7 +80,12 @@ export async function approveCandidate(input: {
     confidence: 1,
   });
 
-  return db.normalizationCandidate.update({
+  const listingsCreated = await materializePendingListings({
+    titleNormalized: candidate.titleNormalized,
+    productId: input.productId,
+  });
+
+  const updatedCandidate = await db.normalizationCandidate.update({
     where: { id: input.candidateId },
     data: {
       status: "APPROVED",
@@ -87,4 +93,9 @@ export async function approveCandidate(input: {
       confidence: 1,
     },
   });
+
+  return {
+    ...updatedCandidate,
+    listingsCreated,
+  };
 }

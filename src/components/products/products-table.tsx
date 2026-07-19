@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
+import { buttonVariants } from "@/components/ui/button";
 import { CATEGORY_LABELS } from "@/lib/constants/platforms";
 import type { ProductSummary } from "@/types/catalog";
 import { cn } from "@/lib/utils";
@@ -25,6 +27,9 @@ export function ProductsTable({
             <th className="px-4 py-3 font-medium">Product</th>
             <th className="px-4 py-3 font-medium">Category</th>
             <th className="px-4 py-3 font-medium">Listings</th>
+            {linkToDetail && (
+              <th className="px-4 py-3 font-medium text-right">Action</th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -33,43 +38,53 @@ export function ProductsTable({
             const displayName = `${product.brand} ${product.model}${
               product.variant ? ` ${product.variant}` : ""
             }`;
+            const productHref = `/products/${product.slug}`;
 
             const rowClassName = cn(
               "border-t border-border transition-colors",
               (onSelect || linkToDetail) && "hover:bg-muted/30",
               isSelected && "bg-muted/50",
+              onSelect && "cursor-pointer",
             );
-
-            if (linkToDetail) {
-              return (
-                <tr key={product.id} className={rowClassName}>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/products/${product.slug}`}
-                      className="font-medium hover:underline"
-                    >
-                      {displayName}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {CATEGORY_LABELS[product.category] ?? product.category}
-                  </td>
-                  <td className="px-4 py-3">{product.listingCount}</td>
-                </tr>
-              );
-            }
 
             return (
               <tr
                 key={product.id}
-                className={cn(rowClassName, onSelect && "cursor-pointer")}
+                className={rowClassName}
                 onClick={onSelect ? () => onSelect(product.id) : undefined}
               >
-                <td className="px-4 py-3">{displayName}</td>
+                <td className="px-4 py-3">
+                  {linkToDetail ? (
+                    <Link
+                      href={productHref}
+                      className="font-medium hover:underline"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {displayName}
+                    </Link>
+                  ) : (
+                    displayName
+                  )}
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {CATEGORY_LABELS[product.category] ?? product.category}
                 </td>
                 <td className="px-4 py-3">{product.listingCount}</td>
+                {linkToDetail && (
+                  <td className="px-4 py-3 text-right">
+                    <Link
+                      href={productHref}
+                      className={cn(
+                        buttonVariants({ variant: "outline", size: "sm" }),
+                        "inline-flex items-center gap-1.5",
+                      )}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      View
+                      <ArrowRight className="size-3.5" aria-hidden="true" />
+                    </Link>
+                  </td>
+                )}
               </tr>
             );
           })}

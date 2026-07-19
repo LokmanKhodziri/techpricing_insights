@@ -25,6 +25,7 @@ export type ListingSummary = {
   originalPriceSen: number | null;
   capturedAt: string;
   sellerName: string | null;
+  sourceUrl: string | null;
 };
 
 export type ProductDetail = {
