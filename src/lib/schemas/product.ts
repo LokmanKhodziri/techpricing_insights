@@ -54,3 +54,9 @@ export const createProductSchema = z.object({
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type ProductSpecs = z.infer<typeof productSpecsSchema>;
+
+export const updateProductMsrpSchema = z.object({
+  msrpMyr: z.coerce.number().positive().max(999_999),
+});
+
+export type UpdateProductMsrpInput = z.infer<typeof updateProductMsrpSchema>;
