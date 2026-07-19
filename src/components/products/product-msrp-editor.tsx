@@ -1,11 +1,10 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { useAppRole } from "@/hooks/use-app-role";
 import { useUpdateProductMsrp } from "@/hooks/use-update-product-msrp";
-import { isAdminRole } from "@/lib/auth/roles";
 import { formatMyrFromSen, senToMyr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -20,8 +19,7 @@ export function ProductMsrpEditor({
   slug,
   msrpSen,
 }: ProductMsrpEditorProps) {
-  const { sessionClaims } = useAuth();
-  const isAdmin = isAdminRole(sessionClaims?.metadata?.role);
+  const { isAdmin } = useAppRole();
   const mutation = useUpdateProductMsrp(slug);
   const [msrpMyr, setMsrpMyr] = useState(
     msrpSen !== null ? String(senToMyr(msrpSen)) : "",
@@ -30,6 +28,9 @@ export function ProductMsrpEditor({
   useEffect(() => {
     setMsrpMyr(msrpSen !== null ? String(senToMyr(msrpSen)) : "");
   }, [msrpSen]);
+
+  const displayedMsrpSen =
+    mutation.isSuccess && mutation.data ? mutation.data.msrpSen : msrpSen;
 
   if (!isAdmin) {
     return null;
@@ -51,8 +52,9 @@ export function ProductMsrpEditor({
       <div className="space-y-1">
         <h2 className="text-sm font-medium">Admin · Update MSRP</h2>
         <p className="text-xs text-muted-foreground">
-          Set the reference price used for discount vs MSRP calculations. Only
-          admins can change this.
+          Set the reference price (MSRP) for discount calculations. Marketplace
+          listing prices are imported separately via CSV and are not changed
+          here.
         </p>
       </div>
 
@@ -84,9 +86,9 @@ export function ProductMsrpEditor({
         </button>
       </form>
 
-      {msrpSen !== null && (
+      {displayedMsrpSen !== null && (
         <p className="mt-3 text-xs text-muted-foreground">
-          Current MSRP: {formatMyrFromSen(msrpSen)}
+          Current MSRP: {formatMyrFromSen(displayedMsrpSen)}
         </p>
       )}
 

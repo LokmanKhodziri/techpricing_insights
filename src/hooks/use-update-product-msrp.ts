@@ -1,5 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import type { PriceTrendSummary } from "@/lib/services/analytics/price-trend";
+import type { ProductDetail } from "@/types/catalog";
+
 async function updateProductMsrp(input: {
   productId: string;
   msrpMyr: number;
@@ -28,11 +31,24 @@ export function useUpdateProductMsrp(slug: string) {
 
   return useMutation({
     mutationFn: updateProductMsrp,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["product", slug] });
-      queryClient.invalidateQueries({ queryKey: ["product", data.slug] });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      queryClient.invalidateQueries({ queryKey: ["price-trend", data.id] });
+    onSuccess: async (data) => {
+      queryClient.setQueryData<ProductDetail>(["product", slug], (current) =>
+        current ? { ...current, msrpSen: data.msrpSen } : current,
+      );
+
+      queryClient.setQueryData<PriceTrendSummary>(
+        ["price-trend", data.id],
+        (current) =>
+          current
+            ? { ...current, msrpMyr: data.msrpSen / 100 }
+            : current,
+      );
+
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ["product", slug] }),
+        queryClient.refetchQueries({ queryKey: ["price-trend", data.id] }),
+        queryClient.invalidateQueries({ queryKey: ["products"] }),
+      ]);
     },
   });
 }

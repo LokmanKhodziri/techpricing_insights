@@ -13,6 +13,7 @@ const PLATFORM_COLORS: Record<string, string> = {
   AMAZON_MY: "amber",
   CAROUSELL: "orange",
   OTHER: "gray",
+  MSRP: "rose",
 };
 
 type PriceTrendChartProps = {
@@ -24,10 +25,20 @@ function formatMyr(value: number): string {
 }
 
 export function PriceTrendChart({ trend }: PriceTrendChartProps) {
-  const categories = trend.platforms.map(String);
+  const platformCategories = trend.platforms.map(String);
+  const showMsrpLine = trend.msrpMyr !== null;
+  const categories = showMsrpLine
+    ? [...platformCategories, "MSRP"]
+    : platformCategories;
   const colors = categories.map(
     (platform) => PLATFORM_COLORS[platform] ?? "gray",
   );
+  const chartData = showMsrpLine
+    ? trend.points.map((point) => ({
+        ...point,
+        MSRP: trend.msrpMyr as number,
+      }))
+    : trend.points;
 
   const margin =
     trend.latestMyr !== null && trend.msrpMyr !== null
@@ -94,14 +105,16 @@ export function PriceTrendChart({ trend }: PriceTrendChartProps) {
         </div>
       </div>
 
-      {trend.points.length === 0 ? (
+      {chartData.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No listing history for this product yet.
+          No listing history for this product yet. Import a CSV on{" "}
+          <span className="font-medium">Imports</span> to add marketplace
+          prices — MSRP alone does not create listing rows.
         </p>
       ) : (
         <LineChart
           className="h-72"
-          data={trend.points}
+          data={chartData}
           index="date"
           categories={categories}
           colors={colors}
