@@ -28,6 +28,17 @@ export type ListingSummary = {
   sourceUrl: string | null;
 };
 
+export type ListingDetail = ListingSummary & {
+  productId: string;
+  productSlug: string;
+  productName: string;
+  platformListingId: string | null;
+  sellerId: string | null;
+  condition: string;
+  shippingSen: number | null;
+  currency: string;
+};
+
 export type ProductDetail = {
   id: string;
   slug: string;

@@ -50,3 +50,10 @@ export const createListingSchema = z.object({
 export type RawListingRow = z.infer<typeof rawListingRowSchema>;
 export type ImportFileInput = z.infer<typeof importFileSchema>;
 export type CreateListingInput = z.infer<typeof createListingSchema>;
+
+export const updateListingPriceSchema = z.object({
+  priceMyr: z.coerce.number().positive().max(999_999),
+  originalPriceMyr: z.coerce.number().positive().max(999_999).optional(),
+});
+
+export type UpdateListingPriceInput = z.infer<typeof updateListingPriceSchema>;

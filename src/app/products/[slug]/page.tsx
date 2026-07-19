@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useMemo } from "react";
 
 import { PriceTrendChart } from "@/components/charts/price-trend-chart";
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/components/products/product-detail";
 import { usePriceTrend } from "@/hooks/use-price-trend";
 import { useProduct } from "@/hooks/use-product";
+import { senToMyr } from "@/lib/format";
 
 type ProductDetailPageProps = {
   params: Promise<{ slug: string }>;
@@ -29,6 +30,18 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     isError: trendError,
     error: trendErrorObj,
   } = usePriceTrend(product?.id ?? null);
+
+  const chartTrend = useMemo(() => {
+    if (!trend || !product) {
+      return trend;
+    }
+
+    return {
+      ...trend,
+      msrpMyr:
+        product.msrpSen !== null ? senToMyr(product.msrpSen) : trend.msrpMyr,
+    };
+  }, [product, trend]);
 
   if (isLoading) {
     return (
@@ -63,7 +76,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         </p>
       )}
 
-      {trend && <PriceTrendChart trend={trend} />}
+      {chartTrend && <PriceTrendChart trend={chartTrend} />}
 
       <ProductDetailView product={product} />
     </div>

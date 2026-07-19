@@ -45,7 +45,8 @@ export default async function AdminPage({
             <strong>Contributor</strong> — Imports + Review queue
           </li>
           <li>
-            <strong>Admin</strong> — contributor access + manage roles here
+            <strong>Admin</strong> — contributor access + update MSRP &amp;
+            listing prices + manage roles here
           </li>
         </ul>
       </div>

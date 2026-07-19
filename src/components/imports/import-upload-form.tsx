@@ -202,11 +202,14 @@ export function ImportUploadForm() {
         <p className="font-medium text-foreground">Expected columns</p>
         <p className="mt-1">
           Required: <code className="rounded bg-muted px-1">title</code>,{" "}
-          <code className="rounded bg-muted px-1">price</code>. Optional:{" "}
-          <code className="rounded bg-muted px-1">original_price</code>,{" "}
+          <code className="rounded bg-muted px-1">price</code> (after voucher).
+          Optional:{" "}
+          <code className="rounded bg-muted px-1">original_price</code> (list
+          price before voucher),{" "}
           <code className="rounded bg-muted px-1">platform_listing_id</code>,{" "}
           <code className="rounded bg-muted px-1">captured_at</code>,{" "}
-          <code className="rounded bg-muted px-1">seller_name</code>.
+          <code className="rounded bg-muted px-1">seller_name</code>,{" "}
+          <code className="rounded bg-muted px-1">source_url</code>.
         </p>
       </div>
 
