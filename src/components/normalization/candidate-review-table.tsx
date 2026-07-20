@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -50,10 +50,6 @@ function CandidateRow({
   const approveMutation = useApproveCandidate();
   const rejectMutation = useRejectCandidate();
   const createProductMutation = useCreateProductFromCandidate();
-
-  useEffect(() => {
-    setProductId(candidate.suggestedProductId ?? "");
-  }, [candidate.id, candidate.suggestedProductId]);
 
   const isBusy =
     approveMutation.isPending ||
@@ -201,7 +197,7 @@ export function CandidateReviewTable() {
         <tbody>
           {candidates.map((candidate) => (
             <CandidateRow
-              key={candidate.id}
+              key={`${candidate.id}:${candidate.suggestedProductId ?? ""}`}
               candidate={candidate}
               products={productOptions}
             />

@@ -134,7 +134,7 @@ export async function importListings(
     try {
       const parsed = await parseImportRow(row, input.platform);
       const platform = input.platform ?? "OTHER";
-      let productId =
+      const productId =
         parsed.productId ??
         (await resolveApprovedProductId(parsed.titleNormalized));
 

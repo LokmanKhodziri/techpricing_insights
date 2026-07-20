@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { use } from "react";
 
 import {
@@ -45,11 +46,11 @@ export default function ListingDetailPage({ params }: ListingDetailPageProps) {
 
 function LinkFallback() {
   return (
-    <a
+    <Link
       href="/products"
-      className="inline-flex text-sm text-muted-foreground hover:text-foreground"
+      className="inline-flex text-sm text-muted-foreground transition-colors hover:text-foreground"
     >
       ← Back to products
-    </a>
+    </Link>
   );
 }
