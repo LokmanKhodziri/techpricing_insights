@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { useAppRole } from "@/hooks/use-app-role";
@@ -15,22 +15,6 @@ type ListingPriceEditorProps = {
 
 export function ListingPriceEditor({ listing }: ListingPriceEditorProps) {
   const { isAdmin } = useAppRole();
-  const mutation = useUpdateListingPrice();
-  const [priceMyr, setPriceMyr] = useState(String(senToMyr(listing.priceSen)));
-  const [originalPriceMyr, setOriginalPriceMyr] = useState(
-    listing.originalPriceSen !== null
-      ? String(senToMyr(listing.originalPriceSen))
-      : "",
-  );
-
-  useEffect(() => {
-    setPriceMyr(String(senToMyr(listing.priceSen)));
-    setOriginalPriceMyr(
-      listing.originalPriceSen !== null
-        ? String(senToMyr(listing.originalPriceSen))
-        : "",
-    );
-  }, [listing.priceSen, listing.originalPriceSen]);
 
   if (!isAdmin) {
     return (
@@ -40,6 +24,23 @@ export function ListingPriceEditor({ listing }: ListingPriceEditorProps) {
       </section>
     );
   }
+
+  return (
+    <ListingPriceEditorForm
+      key={`${listing.priceSen}:${listing.originalPriceSen ?? "none"}`}
+      listing={listing}
+    />
+  );
+}
+
+function ListingPriceEditorForm({ listing }: ListingPriceEditorProps) {
+  const mutation = useUpdateListingPrice();
+  const [priceMyr, setPriceMyr] = useState(String(senToMyr(listing.priceSen)));
+  const [originalPriceMyr, setOriginalPriceMyr] = useState(
+    listing.originalPriceSen !== null
+      ? String(senToMyr(listing.originalPriceSen))
+      : "",
+  );
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

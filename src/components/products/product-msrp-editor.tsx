@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { useAppRole } from "@/hooks/use-app-role";
@@ -20,21 +20,33 @@ export function ProductMsrpEditor({
   msrpSen,
 }: ProductMsrpEditorProps) {
   const { isAdmin } = useAppRole();
+
+  if (!isAdmin) {
+    return null;
+  }
+
+  return (
+    <ProductMsrpEditorForm
+      key={msrpSen ?? "none"}
+      productId={productId}
+      slug={slug}
+      msrpSen={msrpSen}
+    />
+  );
+}
+
+function ProductMsrpEditorForm({
+  productId,
+  slug,
+  msrpSen,
+}: ProductMsrpEditorProps) {
   const mutation = useUpdateProductMsrp(slug);
   const [msrpMyr, setMsrpMyr] = useState(
     msrpSen !== null ? String(senToMyr(msrpSen)) : "",
   );
 
-  useEffect(() => {
-    setMsrpMyr(msrpSen !== null ? String(senToMyr(msrpSen)) : "");
-  }, [msrpSen]);
-
   const displayedMsrpSen =
     mutation.isSuccess && mutation.data ? mutation.data.msrpSen : msrpSen;
-
-  if (!isAdmin) {
-    return null;
-  }
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
